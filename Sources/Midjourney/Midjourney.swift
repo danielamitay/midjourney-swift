@@ -10,7 +10,7 @@ import Foundation
 
 public struct Midjourney {
     private let cookie: String
-    init(cookie: String) {
+    public init(cookie: String) {
         self.cookie = cookie
     }
 }
@@ -29,7 +29,7 @@ extension Midjourney {
         case unknown
     }
 
-    func myUserId(complete: @escaping (Result<String, Error>) -> Void) {
+    public func myUserId(complete: @escaping (Result<String, Error>) -> Void) {
         let requestUrl = "https://www.midjourney.com/explore"
         AF.request(
             requestUrl,
