@@ -10,7 +10,6 @@ import Foundation
 
 public struct Midjourney {
     private let cookie: String
-
     init(cookie: String) {
         self.cookie = cookie
     }
@@ -31,29 +30,11 @@ extension Midjourney {
     }
 
     func myUserId(complete: @escaping (Result<String, Error>) -> Void) {
-        let headers: [HTTPHeader] = [
-            "accept": "*/*",
-            "accept-language": "en-US,en;q=0.9",
-            "cache-control": "no-cache",
-            "pragma": "no-cache",
-            "sec-ch-ua": "\"Not_A Brand\";v=\"8\", \"Chromium\";v=\"120\", \"Google Chrome\";v=\"120\"",
-            "sec-ch-ua-mobile": "?0",
-            "sec-ch-ua-platform": "\"macOS\"",
-            "sec-fetch-dest": "empty",
-            "sec-fetch-mode": "cors",
-            "sec-fetch-site": "same-origin",
-            "x-csrf-protection": "1",
-            "Referer": "https://www.midjourney.com/explore",
-            "Referrer-Policy": "origin-when-cross-origin",
-            "cookie": cookie,
-        ].compactMap { (key: String, value: String) in
-                .init(name: key, value: value)
-        }
         let requestUrl = "https://www.midjourney.com/explore"
         AF.request(
             requestUrl,
             method: .get,
-            headers: .init(headers)
+            headers: requestHeaders
         )
         .validate()
         .responseString(encoding: .utf8) { response in
@@ -77,7 +58,101 @@ extension Midjourney {
     }
 }
 
-fileprivate extension String {
+extension Midjourney {
+    struct RecentJobsResponse: Decodable {
+        let type: String
+        let jobs: [RecentJob]
+    }
+
+    struct RecentJob: Decodable, Identifiable {
+        let id: String
+        let full_command: String
+        let width: Int
+        let height: Int
+        let username: String
+    }
+
+    func recentJobs(page: Int = 0, pageSize: Int = 60, complete: @escaping (Result<[RecentJob], Error>) -> Void) {
+        let requestUrl = "https://www.midjourney.com/api/app/recent-jobs"
+        let parameters: Parameters = [
+            "amount": pageSize,
+            "page": page,
+            "feed": "top_recent_jobs",
+            "_ql": "explore",
+        ]
+        AF.request(
+            requestUrl,
+            method: .get,
+            parameters: parameters,
+            encoding: URLEncoding(destination: .queryString),
+            headers: requestHeaders
+        )
+        .validate()
+        .responseDecodable(of: RecentJobsResponse.self) { response in
+            complete(response.result.map { $0.jobs }.mapError { $0 as Error})
+        }
+    }
+
+    struct MyJobsResponse: Decodable {
+        let checkpoint: String?
+        let cursor: String
+        let data: [MyJob]
+    }
+
+    struct MyJob: Decodable, Identifiable {
+        let id: String
+        let full_command: String
+        let width: Int
+        let height: Int
+    }
+
+    func myJobs(userId: String, cursor: String? = nil, pageSize: Int = 1000, complete: @escaping (Result<[MyJob], Error>) -> Void) {
+        let requestUrl = "https://www.midjourney.com/api/pg/thomas-jobs"
+        var parameters: Parameters = [
+            "user_id": userId,
+            "page_size": pageSize,
+        ]
+        if let cursor {
+            parameters["cursor"] = cursor
+        }
+        AF.request(
+            requestUrl,
+            method: .get,
+            parameters: parameters,
+            encoding: URLEncoding(destination: .queryString),
+            headers: requestHeaders
+        )
+        .validate()
+        .responseDecodable(of: MyJobsResponse.self) { response in
+            complete(response.result.map { $0.data }.mapError { $0 as Error})
+        }
+    }
+}
+
+private extension Midjourney {
+    var requestHeaders: HTTPHeaders {
+        let headers: [HTTPHeader] = [
+            "accept": "*/*",
+            "accept-language": "en-US,en;q=0.9",
+            "cache-control": "no-cache",
+            "pragma": "no-cache",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"macOS\"",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "same-origin",
+            "x-csrf-protection": "1",
+            "Referer": "https://www.midjourney.com/explore",
+            "Referrer-Policy": "origin-when-cross-origin",
+            "cookie": cookie,
+        ].compactMap { (key: String, value: String) in
+                .init(name: key, value: value)
+        }
+        return .init(headers)
+    }
+}
+
+private extension String {
     func stringBetween(start: String, end: String) -> String? {
         guard let startRange = self.range(of: start),
               let endRange = self.range(of: end, range: startRange.upperBound..<self.endIndex) else {
@@ -87,4 +162,3 @@ fileprivate extension String {
         return String(self[range])
     }
 }
-
