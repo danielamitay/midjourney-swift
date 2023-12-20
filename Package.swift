@@ -13,7 +13,10 @@ let package = Package(
             targets: ["Midjourney"]
         ),
     ],
+    dependencies: [
+        .package(url: "https://github.com/Alamofire/Alamofire.git", .upToNextMajor(from: "5.8.0")),
+    ],
     targets: [
-        .target(name: "Midjourney"),
+        .target(name: "Midjourney", dependencies: ["Alamofire"]),
     ]
 )
