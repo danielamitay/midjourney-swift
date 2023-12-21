@@ -66,6 +66,8 @@ extension Midjourney {
 
     public struct RecentJob: Decodable, Identifiable {
         public let id: String
+        public let parent_id: String
+        public let parent_grid: Int
         public let full_command: String
         public let width: Int
         public let height: Int
