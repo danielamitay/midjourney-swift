@@ -15,11 +15,12 @@ public struct Midjourney {
     }
 }
 
-extension Midjourney {
+public extension Midjourney {
     private struct AuthResponse: Decodable {
         struct AuthProperties: Decodable {
             struct AuthUser: Decodable {
                 let midjourney_id: String
+                let displayName: String
             }
             let initialAuthUser: AuthUser
         }
@@ -29,7 +30,7 @@ extension Midjourney {
         case unknown
     }
 
-    public func myUserId(complete: @escaping (Result<String, Error>) -> Void) {
+    func myUserId(complete: @escaping (Result<String, Error>) -> Void) {
         let requestUrl = "https://www.midjourney.com/explore"
         AF.request(
             requestUrl,
@@ -58,13 +59,13 @@ extension Midjourney {
     }
 }
 
-extension Midjourney {
-    struct RecentJobsResponse: Decodable {
+public extension Midjourney {
+    private struct RecentJobsResponse: Decodable {
         let type: String
         let jobs: [Job]
     }
 
-    public func recentJobs(page: Int = 0, pageSize: Int = 60, complete: @escaping (Result<[Job], Error>) -> Void) {
+    func recentJobs(page: Int = 0, pageSize: Int = 60, complete: @escaping (Result<[Job], Error>) -> Void) {
         let requestUrl = "https://www.midjourney.com/api/app/recent-jobs"
         let parameters: Parameters = [
             "amount": pageSize,
@@ -85,13 +86,13 @@ extension Midjourney {
         }
     }
 
-    struct MyJobsResponse: Decodable {
+    private struct MyJobsResponse: Decodable {
         let checkpoint: String?
         let cursor: String
         let data: [Job]
     }
 
-    public func myJobs(userId: String, cursor: String? = nil, pageSize: Int = 1000, complete: @escaping (Result<[Job], Error>) -> Void) {
+    func myJobs(userId: String, cursor: String? = nil, pageSize: Int = 1000, complete: @escaping (Result<[Job], Error>) -> Void) {
         let requestUrl = "https://www.midjourney.com/api/pg/thomas-jobs"
         var parameters: Parameters = [
             "user_id": userId,
