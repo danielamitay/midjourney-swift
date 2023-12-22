@@ -61,20 +61,10 @@ extension Midjourney {
 extension Midjourney {
     struct RecentJobsResponse: Decodable {
         let type: String
-        let jobs: [RecentJob]
+        let jobs: [Job]
     }
 
-    public struct RecentJob: Decodable, Identifiable {
-        public let id: String
-        public let parent_id: String
-        public let parent_grid: Int
-        public let full_command: String
-        public let width: Int
-        public let height: Int
-        public let username: String
-    }
-
-    public func recentJobs(page: Int = 0, pageSize: Int = 60, complete: @escaping (Result<[RecentJob], Error>) -> Void) {
+    public func recentJobs(page: Int = 0, pageSize: Int = 60, complete: @escaping (Result<[Job], Error>) -> Void) {
         let requestUrl = "https://www.midjourney.com/api/app/recent-jobs"
         let parameters: Parameters = [
             "amount": pageSize,
@@ -98,17 +88,10 @@ extension Midjourney {
     struct MyJobsResponse: Decodable {
         let checkpoint: String?
         let cursor: String
-        let data: [MyJob]
+        let data: [Job]
     }
 
-    public struct MyJob: Decodable, Identifiable {
-        public let id: String
-        public let full_command: String
-        public let width: Int
-        public let height: Int
-    }
-
-    public func myJobs(userId: String, cursor: String? = nil, pageSize: Int = 1000, complete: @escaping (Result<[MyJob], Error>) -> Void) {
+    public func myJobs(userId: String, cursor: String? = nil, pageSize: Int = 1000, complete: @escaping (Result<[Job], Error>) -> Void) {
         let requestUrl = "https://www.midjourney.com/api/pg/thomas-jobs"
         var parameters: Parameters = [
             "user_id": userId,
