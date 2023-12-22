@@ -42,7 +42,7 @@ public extension Midjourney.Job {
         return .grid
     }
 
-    struct Image {
+    struct Image: Identifiable {
         public let id: String
         public let parent_id: String
         public let parent_grid: Int
