@@ -1,5 +1,5 @@
 //
-//  Midjourney+Job.swift
+//  Midjourney+Jobs.swift
 //  midjourney-swift
 //
 //  Created by Daniel Amitay on 12/22/23.
@@ -25,5 +25,26 @@ public extension Midjourney {
         public let parent_id: String?
         public let username: String?
         public let user_id: String?
+    }
+}
+
+// MARK: Urls
+
+internal extension Midjourney.Job {
+    static let recentJobsUrl = "https://www.midjourney.com/api/app/recent-jobs"
+    static let userJobsUrl = "https://www.midjourney.com/api/app/recent-jobs"
+}
+
+// MARK: Response formats
+
+internal extension Midjourney {
+    struct RecentJobsResponse: Decodable {
+        let type: String
+        let jobs: [Job]
+    }
+    struct UserJobsResponse: Decodable {
+        let checkpoint: String?
+        let cursor: String
+        let data: [Job]
     }
 }
