@@ -42,23 +42,55 @@ public extension Midjourney.Job {
         return .grid
     }
 
+    var aspectRatio: CGFloat {
+        return CGFloat(width) / CGFloat(height)
+    }
+
+    var enqueueDate: Date {
+        return Midjourney.Job.enqueueDateFormatter.date(from: enqueue_time) ?? .distantPast
+    }
+
     struct Image: Identifiable {
         public let id: String
         public let parent_id: String
         public let parent_grid: Int
+        public let width: Int
+        public let height: Int
+
+        public init(id: String, parent_id: String, parent_grid: Int, width: Int, height: Int) {
+            self.id = id
+            self.parent_id = parent_id
+            self.parent_grid = parent_grid
+            self.width = width
+            self.height = height
+        }
+
+        public var aspectRatio: CGFloat {
+            return CGFloat(width) / CGFloat(height)
+        }
     }
 
     var images: [Image] {
         switch jobType {
         case .grid:
-            return (0..<batch_size).map { idx in
-                // Generate an id that is consistent across generations/fetches
-                let uuid: String = "\(id)_\(idx)"
-                return Image(id: UUID().uuidString, parent_id: id, parent_grid: idx)
+            return (0..<batch_size).map { grid_id in
+                return Image(
+                    // Generate an id that is consistent across generations/fetches
+                    id: "\(id)_\(grid_id)",
+                    parent_id: id,
+                    parent_grid: grid_id,
+                    width: width / 2,
+                    height: height / 2
+                )
             }
         case .image(let parent_id, let parent_grid):
-            let image: Image = .init(id: id, parent_id: parent_id, parent_grid: parent_grid)
-            return [image]
+            return [Image(
+                id: id,
+                parent_id: parent_id,
+                parent_grid: parent_grid,
+                width: width,
+                height: height
+            )]
         }
     }
 }
@@ -121,4 +153,16 @@ internal extension Midjourney {
         let cursor: String
         let data: [Job]
     }
+}
+
+// MARK: Helpers
+
+internal extension Midjourney.Job {
+    static let enqueueDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSX"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        return formatter
+    }()
 }
