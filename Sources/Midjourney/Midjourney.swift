@@ -21,7 +21,9 @@ public extension Midjourney {
         AF.request(
             Midjourney.UserInfo.userInfoUrl,
             method: .get,
-            headers: requestHeaders
+            headers: requestHeaders,
+            // A simple retry policy for this idempotent request
+            interceptor: ConnectionLostRetryPolicy()
         )
         .validate()
         .responseString(encoding: .utf8) { response in
@@ -60,7 +62,9 @@ public extension Midjourney {
             method: .get,
             parameters: parameters,
             encoding: URLEncoding(destination: .queryString),
-            headers: requestHeaders
+            headers: requestHeaders,
+            // A simple retry policy for this idempotent request
+            interceptor: ConnectionLostRetryPolicy()
         )
         .validate()
         .responseDecodable(of: RecentJobsResponse.self) { response in
@@ -81,7 +85,9 @@ public extension Midjourney {
             method: .get,
             parameters: parameters,
             encoding: URLEncoding(destination: .queryString),
-            headers: requestHeaders
+            headers: requestHeaders,
+            // A simple retry policy for this idempotent request
+            interceptor: ConnectionLostRetryPolicy()
         )
         .validate()
         .responseDecodable(of: UserJobsResponse.self) { response in
