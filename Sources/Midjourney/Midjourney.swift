@@ -16,6 +16,8 @@ public struct Midjourney {
     }
 }
 
+// MARK: User Info
+
 public extension Midjourney {
     func userInfo(complete: @escaping (Result<UserInfo, Error>) -> Void) {
         AF.request(
@@ -47,7 +49,17 @@ public extension Midjourney {
             }
         }
     }
+
+    func userInfoAsync() async throws -> UserInfo {
+        return try await withCheckedThrowingContinuation { continuation in
+            userInfo() { result in
+                continuation.resume(with: result)
+            }
+        }
+    }
 }
+
+// MARK: Jobs
 
 public extension Midjourney {
     func recentJobs(page: Int = 0, pageSize: Int = 60, complete: @escaping (Result<[Job], Error>) -> Void) {
@@ -72,6 +84,14 @@ public extension Midjourney {
         }
     }
 
+    func recentJobsAsync(page: Int = 0, pageSize: Int = 60) async throws -> [Job] {
+        return try await withCheckedThrowingContinuation { continuation in
+            recentJobs(page: page, pageSize: pageSize) { result in
+                continuation.resume(with: result)
+            }
+        }
+    }
+
     func userJobs(_ userId: String, cursor: String? = nil, pageSize: Int = 1000, complete: @escaping (Result<[Job], Error>) -> Void) {
         var parameters: Parameters = [
             "user_id": userId,
@@ -92,6 +112,14 @@ public extension Midjourney {
         .validate()
         .responseDecodable(of: UserJobsResponse.self) { response in
             complete(response.result.map { $0.data }.mapError { $0 as Error})
+        }
+    }
+
+    func userJobsAsync(_ userId: String, cursor: String? = nil, pageSize: Int = 1000) async throws -> [Job] {
+        return try await withCheckedThrowingContinuation { continuation in
+            userJobs(userId, cursor: cursor, pageSize: pageSize) { result in
+                continuation.resume(with: result)
+            }
         }
     }
 }
