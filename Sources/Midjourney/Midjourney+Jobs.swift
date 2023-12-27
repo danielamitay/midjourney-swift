@@ -34,12 +34,40 @@ public extension Midjourney.Job {
         case image(String, Int)
     }
 
+    struct ParsedCommand {
+        public struct Parameter: Identifiable {
+            public var id: String {
+                return "--\(name) \(value)"
+            }
+            public let name: String
+            public let value: String
+        }
+        public let prompt: String
+        public let parameters: [Parameter]
+    }
+
     // Whether this job is a grid or just one image
     var jobType: JobType {
         if let parent_id, let parent_grid {
             return .image(parent_id, parent_grid)
         }
         return .grid
+    }
+
+    var parsedCommand: ParsedCommand {
+        let components = full_command.components(separatedBy: "--")
+        let prompt = components.first?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+        var parameters: [ParsedCommand.Parameter] = []
+        components.dropFirst().forEach { component in
+            let pair = component.split(separator: " ", maxSplits: 1, omittingEmptySubsequences: true)
+            if pair.count == 2 {
+                let key = String(pair[0]).trimmingCharacters(in: .whitespacesAndNewlines)
+                let value = String(pair[1]).trimmingCharacters(in: .whitespacesAndNewlines)
+                parameters.append(.init(name: key, value: value))
+            }
+        }
+        return .init(prompt: prompt, parameters: parameters)
     }
 
     var aspectRatio: CGFloat {
