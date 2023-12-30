@@ -122,4 +122,31 @@ public extension Midjourney {
             }
         }
     }
+
+    func jobsStatus(_ jobIds: [String], complete: @escaping (Result<[Job], Error>) -> Void) {
+        let parameters: Parameters = [
+            "jobIds": jobIds,
+        ]
+        AF.request(
+            Midjourney.Job.jobStatusUrl,
+            method: .post,
+            parameters: parameters,
+            encoding: URLEncoding(destination: .httpBody),
+            headers: requestHeaders,
+            // A simple retry policy for this idempotent request
+            interceptor: ConnectionLostRetryPolicy()
+        )
+        .validate()
+        .responseDecodable(of: [Job].self) { response in
+            complete(response.result.mapError { $0 as Error})
+        }
+    }
+
+    func jobsStatusAsync(_ jobIds: [String]) async throws -> [Job] {
+        return try await withCheckedThrowingContinuation { continuation in
+            jobsStatus(jobIds) { result in
+                continuation.resume(with: result)
+            }
+        }
+    }
 }

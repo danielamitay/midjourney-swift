@@ -167,6 +167,7 @@ public extension Midjourney.Job.Image {
 internal extension Midjourney.Job {
     static let recentJobsUrl = "https://www.midjourney.com/api/app/recent-jobs"
     static let userJobsUrl = "https://www.midjourney.com/api/pg/thomas-jobs"
+    static let jobStatusUrl = "https://www.midjourney.com/api/app/job-status"
 }
 
 // MARK: Response formats
