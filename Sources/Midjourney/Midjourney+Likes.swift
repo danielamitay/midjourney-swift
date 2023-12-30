@@ -11,6 +11,9 @@ import Foundation
 
 internal extension Midjourney.Job {
     static let likedJobsUrl = "https://www.midjourney.com/api/pg/user-likes"
+    static func likeJobUrl(_ jobId: String) -> String {
+        return "https://www.midjourney.com/api/jobs/\(jobId)/like"
+    }
 }
 
 // MARK: Response formats

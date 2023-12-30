@@ -176,7 +176,39 @@ public extension Midjourney {
 
     func likedJobsAsync(page: Int = 0) async throws -> [Job] {
         return try await withCheckedThrowingContinuation { continuation in
-            likedJobs { result in
+            likedJobs(page: page) { result in
+                continuation.resume(with: result)
+            }
+        }
+    }
+
+    func likeJob(_ jobId: String, _ value: Bool, complete: @escaping (Result<Void, Error>) -> Void) {
+        let parameters: Parameters = [
+            "value": (value ? "true" : "false"),
+        ]
+        AF.request(
+            Midjourney.Job.likeJobUrl(jobId),
+            method: .post,
+            parameters: parameters,
+            encoding: URLEncoding(destination: .queryString),
+            headers: requestHeaders,
+            // A simple retry policy for this idempotent request
+            interceptor: ConnectionLostRetryPolicy()
+        )
+        .validate()
+        .responseData { response in
+            switch response.result {
+            case .success(_):
+                complete(.success(()))
+            case .failure(let error):
+                complete(.failure(error as Error))
+            }
+        }
+    }
+
+    func likeJobAsync(_ jobId: String, _ value: Bool) async throws -> Void {
+        return try await withCheckedThrowingContinuation { continuation in
+            likeJob(jobId, value) { result in
                 continuation.resume(with: result)
             }
         }
