@@ -25,6 +25,7 @@ public extension Midjourney {
         public let parent_grid: Int?
         public let user_id: String?
         public let username: String?
+        public let liked_by_user: Bool?
     }
 }
 
