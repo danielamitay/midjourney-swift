@@ -150,3 +150,35 @@ public extension Midjourney {
         }
     }
 }
+
+// MARK: Likes
+
+public extension Midjourney {
+    func likedJobs(page: Int = 0, complete: @escaping (Result<[Job], Error>) -> Void) {
+        let parameters: Parameters = [
+            "page": page,
+            "_ql": "explore",
+        ]
+        AF.request(
+            Midjourney.Job.likedJobsUrl,
+            method: .get,
+            parameters: parameters,
+            encoding: URLEncoding(destination: .queryString),
+            headers: requestHeaders,
+            // A simple retry policy for this idempotent request
+            interceptor: ConnectionLostRetryPolicy()
+        )
+        .validate()
+        .responseDecodable(of: LikedJobsResponse.self) { response in
+            complete(response.result.map { $0.jobs }.mapError { $0 as Error})
+        }
+    }
+
+    func likedJobsAsync(page: Int = 0) async throws -> [Job] {
+        return try await withCheckedThrowingContinuation { continuation in
+            likedJobs { result in
+                continuation.resume(with: result)
+            }
+        }
+    }
+}
