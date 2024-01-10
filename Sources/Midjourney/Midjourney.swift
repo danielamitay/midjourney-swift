@@ -214,3 +214,103 @@ public extension Midjourney {
         }
     }
 }
+
+// MARK: Alpha
+
+public extension Midjourney {
+    func alphaClient(complete: @escaping (Result<Midjourney.Alpha, Error>) -> Void) {
+        AF.request(
+            Midjourney.Alpha.userInfoUrl,
+            method: .get,
+            headers: requestHeaders,
+            // A simple retry policy for this idempotent request
+            interceptor: ConnectionLostRetryPolicy()
+        )
+        .validate()
+        .responseString(encoding: .utf8) { response in
+            switch response.result {
+            case .success(let html):
+                let jsonString = html.stringBetween(start: "<script id=\"__NEXT_DATA__\" type=\"application/json\">", end: "</script>")
+                if let jsonString, let jsonData = jsonString.data(using: .utf8) {
+                    do {
+                        let authResponse = try JSONDecoder().decode(AuthResponse.self, from: jsonData)
+                        let authUser = authResponse.props.initialAuthUser
+                        if authUser.abilities.web_tester == true {
+                            let alphaClient = Midjourney.Alpha(
+                                cookie: self.cookie,
+                                userId: authUser.midjourney_id,
+                                webToken: authUser.websocketAccessToken
+                            )
+                            complete(.success(alphaClient))
+                        } else {
+                            complete(.failure(AuthError.unknown))
+                        }
+                    } catch {
+                        complete(.failure(error))
+                    }
+                } else {
+                    complete(.failure(AuthError.unknown))
+                }
+            case .failure(let failure):
+                complete(.failure(failure))
+            }
+        }
+    }
+
+    func alphaClientAsync() async throws -> Midjourney.Alpha {
+        return try await withCheckedThrowingContinuation { continuation in
+            alphaClient { result in
+                continuation.resume(with: result)
+            }
+        }
+    }
+}
+
+public extension Midjourney.Alpha {
+    func imagine(_ prompt: String, complete: @escaping (Result<SubmittedJob, Error>) -> Void) {
+        let parameters: Parameters = [
+            "prompt": prompt,
+            "prompts": [prompt],
+            "parameters": [:],
+            "flags": [
+                "mode": "fast",
+                "private": "false"
+            ],
+            "jobType": "imagine",
+            "channelId": "singleplayer_\(userId)",
+            "channelName": "Home Session",
+            "metadata": [
+                "imagePrompts": 0,
+                "autoPrompt": false
+            ]
+        ]
+        AF.request(
+            Midjourney.Alpha.submitJobsUrl,
+            method: .post,
+            parameters: parameters,
+            encoding: JSONEncoding(),
+            headers: requestHeaders
+        )
+        .validate()
+        .responseDecodable(of: SubmitJobsResponse.self) { response in
+            switch response.result {
+            case .success(let jobsResponse):
+                if let job = jobsResponse.success.first {
+                    complete(.success(job))
+                } else {
+                    complete(.failure(Midjourney.AuthError.unknown))
+                }
+            case .failure(let error):
+                complete(.failure(error as Error))
+            }
+        }
+    }
+
+    func imagineAsync(_ prompt: String) async throws -> SubmittedJob {
+        return try await withCheckedThrowingContinuation { continuation in
+            imagine(prompt) { result in
+                continuation.resume(with: result)
+            }
+        }
+    }
+}

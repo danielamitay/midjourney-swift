@@ -31,8 +31,13 @@ internal extension Midjourney {
     struct AuthResponse: Decodable {
         struct AuthProperties: Decodable {
             struct AuthUser: Decodable {
+                struct UserAbilities: Decodable {
+                    let web_tester: Bool?
+                }
                 let midjourney_id: String
                 let displayName: String
+                let websocketAccessToken: String
+                let abilities: UserAbilities
             }
             let initialAuthUser: AuthUser
         }
@@ -58,7 +63,6 @@ internal extension Midjourney {
             "sec-fetch-mode": "cors",
             "sec-fetch-site": "same-origin",
             "x-csrf-protection": "1",
-            "Referer": "https://www.midjourney.com/explore",
             "Referrer-Policy": "origin-when-cross-origin",
             "cookie": cookie,
         ].compactMap { (key: String, value: String) in
