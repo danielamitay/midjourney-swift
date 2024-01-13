@@ -313,4 +313,8 @@ public extension Midjourney.Alpha {
             }
         }
     }
+
+    func createWebSocket() -> WebSocket {
+        return WebSocket(userId: userId, webToken: webToken)
+    }
 }
