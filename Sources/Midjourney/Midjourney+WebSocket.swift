@@ -9,19 +9,19 @@ import Combine
 import Foundation
 
 public struct WSJob {
-    let id: String
-    let enqueue_time: Int
-    let width: Int
-    let height: Int
+    public let id: String
+    public let enqueue_time: Int
+    public let width: Int
+    public let height: Int
 }
 
 public struct WSJobUpdate {
-    struct Img: Codable {
-        let data: String
+    public struct Img: Codable {
+        public let data: String
     }
-    let id: String
-    let percentage_complete: Int
-    let imgs: [Img]?
+    public let id: String
+    public let percentage_complete: Int
+    public let imgs: [Img]?
 }
 
 public protocol WebSocketDelegate {
