@@ -5,10 +5,33 @@
 //  Created by Daniel Amitay on 1/12/24.
 //
 
+import Combine
 import Foundation
+
+public struct WSJob {
+    let id: String
+    let enqueue_time: Int
+    let width: Int
+    let height: Int
+}
+
+public struct WSJobUpdate {
+    struct Img: Codable {
+        let data: String
+    }
+    let id: String
+    let percentage_complete: Int
+    let imgs: [Img]?
+}
+
+public protocol WebSocketDelegate {
+    func jobCreated(_ job: WSJob)
+    func jobUpdate(_ job: WSJobUpdate)
+}
 
 public final class WebSocket {
     // Initializer arguments
+    public var delegate: WebSocketDelegate?
     private let userId: String
     private let webToken: String
 
@@ -16,7 +39,8 @@ public final class WebSocket {
     private var webSocketTask: URLSessionWebSocketTask? = nil
     private var pingTimer: Timer? = nil
 
-    init(userId: String, webToken: String) {
+    init(delegate: WebSocketDelegate? = nil, userId: String, webToken: String) {
+        self.delegate = delegate
         self.userId = userId
         self.webToken = webToken
     }
@@ -101,7 +125,22 @@ private extension WebSocket {
     }
 
     private func onSocketMessage(_ message: WebSocketMessage) {
-        print("Web socket message: \(message)")
+        switch message {
+        case .roomNewJob(_, let job):
+            let createdJob = WSJob(id: job.id, enqueue_time: job.enqueue_time, width: job.width, height: job.height)
+            delegate?.jobCreated(createdJob)
+        case .jobProgress(let data, let jobId, let roomId):
+            let updatedJob = WSJobUpdate(
+                id: jobId,
+                percentage_complete: data.percentage_complete,
+                imgs: data.imgs?.compactMap {
+                    return WSJobUpdate.Img(data: $0.data)
+                }
+            )
+            delegate?.jobUpdate(updatedJob)
+        default:
+            break
+        }
     }
 }
 
