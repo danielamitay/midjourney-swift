@@ -314,6 +314,26 @@ public extension Midjourney.Alpha {
         }
     }
 
+    func userQueue(complete: @escaping (Result<UserQueue, Error>) -> Void) {
+        AF.request(
+            Midjourney.Alpha.userQueueUrl(userId),
+            method: .get,
+            headers: requestHeaders
+        )
+        .validate()
+        .responseDecodable(of: UserQueue.self) { response in
+            complete(response.result.mapError { $0 as Error })
+        }
+    }
+
+    func userQueueAsync() async throws -> UserQueue {
+        return try await withCheckedThrowingContinuation { continuation in
+            userQueue { result in
+                continuation.resume(with: result)
+            }
+        }
+    }
+
     func createWebSocket() -> WebSocket {
         return WebSocket(userId: userId, webToken: webToken)
     }

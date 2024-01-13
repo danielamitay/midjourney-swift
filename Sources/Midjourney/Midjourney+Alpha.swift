@@ -39,6 +39,11 @@ public extension Midjourney.Alpha {
         public let meta: JobMeta
         public let optimisticJobIndex: Int
     }
+
+    struct UserQueue: Codable {
+        public let running: [Midjourney.Job]
+        public let running_all: [String]
+    }
 }
 
 // MARK: Urls
@@ -46,6 +51,9 @@ public extension Midjourney.Alpha {
 internal extension Midjourney.Alpha {
     static let userInfoUrl = "https://alpha.midjourney.com/explore"
     static let submitJobsUrl = "https://alpha.midjourney.com/api/app/submit-jobs"
+    static func userQueueUrl(_ userId: String) -> String {
+        return "https://alpha.midjourney.com/api/app/users/queue?userId=\(userId)"
+    }
 }
 
 // MARK: Response formats
