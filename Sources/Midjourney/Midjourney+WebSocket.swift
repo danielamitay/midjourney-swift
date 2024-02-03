@@ -129,7 +129,7 @@ private extension WebSocket {
         case .roomNewJob(_, let job):
             let createdJob = WSJob(id: job.id, enqueue_time: job.enqueue_time, width: job.width, height: job.height)
             delegate?.jobCreated(createdJob)
-        case .jobProgress(let data, let jobId, let roomId):
+        case .jobProgress(let data, let jobId, _):
             let updatedJob = WSJobUpdate(
                 id: jobId,
                 percentage_complete: data.percentage_complete,
